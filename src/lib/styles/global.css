@@ -1,0 +1,34 @@
+:root {
+    --color-deep-forest: #0a130c;
+    --color-pine-green: #19270d;
+    --color-muted-sage: #818c3c;
+    --color-golden-acorn: #72601b;
+    --color-rich-walnut: #593a0e;
+    --color-white: #FFF;
+    --color-black: #000;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+* {
+    margin: 0;
+    font-weight: normal;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    background-image: url("/treeshaker-background.png");
+    background-size: cover;
+    background-position: center, center;
+    color: var(--color-white);
+    font-family: "EB Garamond Variable", serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+
+input, button, textarea, select {
+    font: inherit;
+}
