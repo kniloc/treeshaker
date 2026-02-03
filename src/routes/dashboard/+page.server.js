@@ -1,5 +1,5 @@
 import {getProduceImages} from "$lib/server/imageUtils.js";
-import {getObtainedProduceData, getUserBalance, getUserData} from "$lib/server/userUtils.js";
+import {getObtainedProduceData, getUserData} from "$lib/server/userUtils.js";
 
 export async function load({locals}) {
     const session = locals.session;
