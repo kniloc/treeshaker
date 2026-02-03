@@ -5,7 +5,7 @@
     import {authClient} from "$lib/auth-client.js";
 
     const {data} = $props();
-    const leaderboardData = data.leaderboardData;
+    const leaderboardData = $derived(data.leaderboardData);
 
     async function signInWithTwitch() {
         await authClient.signIn.social({

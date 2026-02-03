@@ -1,11 +1,49 @@
 <script>
-    import {updateObtainedProduce, updateTimestamp} from "$lib/clientUtils.js";
-    const {data} = $props();
+    import {onMount, onDestroy} from "svelte";
+    import { purchaseFruit } from "$lib/clientUtils.js";
+    import {invalidateAll} from "$app/navigation";
+
+    const DEV_MODE = import.meta.env.DEV;
+    const COOLDOWN_MS = DEV_MODE ? 60 * 1000 : 12 * 60 * 60 * 1000;
+
+    let {data} = $props();
     const name = $derived(data.username);
     const produceData = $derived(data.obtainedProduceData);
     const userBalance = $derived(data.userBalance);
+    const lastPurchasedFruit = $derived(data.lastPurchasedFruit);
     const remainingProduce = $derived(Object.keys(produceData).filter(key => produceData[key] === 0));
-    const isButtonDisabled = $derived(!hasEnoughBalance());
+
+    let isPurchasing = $state(false);
+    let now = $state(Date.now());
+    let timerInterval = null;
+
+    const timeUntilNextPurchase = $derived(getTimeUntilNextPurchase());
+    const isOnCooldown = $derived(timeUntilNextPurchase > 0);
+    const isButtonDisabled = $derived(!hasEnoughBalance() || remainingProduce.length === 0 || isOnCooldown);
+
+    onMount(() => {
+        timerInterval = setInterval(() => {
+            now = Date.now();
+        }, 1000);
+    });
+
+    onDestroy(() => {
+        if (timerInterval) clearInterval(timerInterval);
+    });
+
+    function getTimeUntilNextPurchase() {
+        if (!lastPurchasedFruit) return 0;
+        const lastPurchaseTime = new Date(lastPurchasedFruit).getTime();
+        const nextAvailableTime = lastPurchaseTime + COOLDOWN_MS;
+        return Math.max(0, nextAvailableTime - now);
+    }
+
+    function formatTimeRemaining(ms) {
+        const hours = Math.floor(ms / (1000 * 60 * 60));
+        const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+        return `${hours}h ${minutes}m ${seconds}s`;
+    }
 
     function calculatePurchasePrice() {
         const basePrice = 150;
@@ -25,19 +63,30 @@
         return userBalance >= price;
     }
 
-    //TODO: add polling to update user data after purchase.
+    async function purchaseRandomFruit() {
+        if (isPurchasing || remainingProduce.length === 0 || isOnCooldown) return;
 
-    function purchaseRandomFruit() {
-        const randomIndex = Math.floor(Math.random() * remainingProduce.length);
+        isPurchasing = true;
+        try {
+            const result = await purchaseFruit(name);
+            if (result?.success) {
+                await invalidateAll();
+            }
+        } finally {
+            isPurchasing = false;
+        }
+    }
 
-        const payload = {[remainingProduce[randomIndex]]: 1};
-        updateTimestamp(name);
-
-        //updateObtainedProduce(payload, name);
+    function getButtonText() {
+        if (isPurchasing) return "Purchasing...";
+        if (isOnCooldown) return `Available in ${formatTimeRemaining(timeUntilNextPurchase)}`;
+        return `Purchase Fruit (§${calculatePurchasePrice()})`;
     }
 </script>
 
-<button type="button" class="purchase-button" onclick={purchaseRandomFruit}>Purchase Fruit (§{calculatePurchasePrice()})</button>
+<button type="button" class="purchase-button" onclick={purchaseRandomFruit} disabled={isButtonDisabled || isPurchasing}>
+    {getButtonText()}
+</button>
 
 <style>
     .purchase-button {

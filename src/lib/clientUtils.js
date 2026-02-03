@@ -1,43 +1,45 @@
-export async function updateNumberOfTurns(numberOfTurns, userName) {
+export async function shakeTree(userName) {
     try {
-        const response = await fetch('/api/update-turns', {
+        const response = await fetch('/api/shake-tree', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({numberOfTurns, userName})
+            body: JSON.stringify({ userName })
         });
 
         if(!response.ok) {
             const errorData = await response.json();
             console.error('Server error:', errorData);
+            return null;
         }
 
         return await response.json();
     } catch (error) {
-        console.error('Failed to update number of turns:', error);
+        console.error('Failed to shake tree:', error);
         throw error;
     }
 }
 
-export async function updateBalance(balance, userName) {
+export async function sellBasket(userName, clonkData) {
     try {
         const response = await fetch('/api/update-balance', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({balance, userName})
+            body: JSON.stringify({ userName, clonkData })
         });
 
         if(!response.ok) {
             const errorData = await response.json();
             console.error('Server error:', errorData);
+            return null;
         }
 
         return await response.json();
     } catch (error) {
-        console.error('Failed to update balance:', error);
+        console.error('Failed to sell basket items:', error);
         throw error;
     }
 }
@@ -80,6 +82,50 @@ export async function updateTimestamp(userName) {
         }
     } catch (error) {
         console.error('Failed to update timestamp:', error);
+        throw error;
+    }
+}
+
+export async function fetchUserData(userName) {
+    try {
+        const response = await fetch('/api/user-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userName })
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        return null;
+    }
+}
+
+export async function purchaseFruit(userName) {
+    try {
+        const response = await fetch('/api/purchase-fruit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userName })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Server error:', errorData);
+            return null;
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to purchase fruit:', error);
         throw error;
     }
 }

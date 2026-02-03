@@ -1,35 +1,46 @@
 <script>
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, untrack } from "svelte";
     import Title from "$lib/components/Title.svelte";
     import Header from "$lib/components/Header.svelte";
     import Navigation from "$lib/components/Tree/Navigation.svelte";
     import Basket from "$lib/components/Tree/Basket.svelte";
-    import { produceData, treeData } from "$lib/components/LocalData/data.js";
-    import { updateBalance, updateNumberOfTurns, updateObtainedProduce } from "$lib/clientUtils.js";
-    import { createUserDataPoller } from "$lib/pollingUtils.js";
+    import { produceData } from "$lib/components/LocalData/data.js";
+    import { shakeTree as shakeTreeApi, sellBasket, updateObtainedProduce, fetchUserData } from "$lib/clientUtils.js";
+    import { createUserDataSubscription } from "$lib/pollingUtils.js";
 
     // Constants
-    const COOLDOWN_DURATION_SECONDS = 60;
-    const BEE_COOLDOWN_DURATION_SECONDS = 120;
+    const DEV_MODE = import.meta.env.DEV;
+    const COOLDOWN_DURATION_SECONDS = DEV_MODE ? 3 : 60;
+    const BEE_COOLDOWN_DURATION_SECONDS = DEV_MODE ? 5 : 120;
     const SELLING_MESSAGE_DURATION_MS = 5000;
-    const POLLING_INTERVAL_MS = 5000;
+
     const MINIMUM_ITEMS_TO_SELL = 5;
-    const BEE_CATEGORY = "Bee";
 
     const { data } = $props();
 
-    // State management - consolidated
+    // State management - initialized once from props
+    let initialized = false;
     let user = $state({
-        name: data.user?.name ?? '',
-        numberOfTurns: data.user?.turns_left ?? 0,
-        balance: data.user?.balance ?? 0,
+        name: '',
+        numberOfTurns: 0,
+        balance: 0,
+    });
+
+    $effect(() => {
+        if (!initialized && data.user) {
+            untrack(() => {
+                user.name = data.user.name ?? '';
+                user.numberOfTurns = data.user.turns_left ?? 0;
+                user.balance = data.user.balance ?? 0;
+                initialized = true;
+            });
+        }
     });
 
     let gameState = $state({
         lastCaughtProduce: undefined,
         basket: [],
         basketCounts: {},
-        currentTree: shuffleArray(treeData),
         cooldownTimer: null,
     });
 
@@ -52,44 +63,43 @@
     const clonkData = $derived(data.clonkData);
     const canSellItems = $derived(gameState.basket.length >= MINIMUM_ITEMS_TO_SELL);
 
-    let userDataPoller;
+    let userDataSubscription;
 
     // Lifecycle
-    onMount(() => {
-        userDataPoller = createUserDataPoller(
-            user.name,
+    onMount(async () => {
+        const userName = data.user?.name;
+        if (!userName) return;
+
+        const freshData = await fetchUserData(userName);
+        if (freshData) {
+            user.numberOfTurns = freshData.turns;
+            user.balance = freshData.balance;
+        }
+
+        userDataSubscription = createUserDataSubscription(
+            userName,
             (updatedData) => {
                 user.numberOfTurns = updatedData.turns;
                 user.balance = updatedData.balance;
-            },
-            POLLING_INTERVAL_MS
+            }
         );
-        userDataPoller.start();
+        userDataSubscription.start();
     });
 
     onDestroy(() => {
-        userDataPoller?.stop();
+        userDataSubscription?.stop();
         if (gameState.cooldownTimer) {
             clearInterval(gameState.cooldownTimer);
         }
     });
 
     // Utility functions
-    function shuffleArray(arr) {
-        const result = [...arr];
-        for (let i = result.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [result[i], result[j]] = [result[j], result[i]];
-        }
-        return result;
+    function getProduceByName(name) {
+        return produceData.find(p => p.name === name);
     }
 
-    function getProduceImage(produce) {
-        return data.images.find(image => image.name === produce.name);
-    }
-
-    function getRandomValue(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+    function getProduceImage(name) {
+        return data.images.find(image => image.name === name);
     }
 
     function formatCountdownTime(ms) {
@@ -100,45 +110,9 @@
     }
 
     // Game logic
-    function selectProduceFromTree() {
-        const randInt = Math.floor(Math.random() * gameState.currentTree.length);
-        const chosenCategory = gameState.currentTree[randInt];
-
-        if (chosenCategory === BEE_CATEGORY) {
-            return { produce: { name: BEE_CATEGORY }, isBee: true };
-        }
-
-        const produceCategory = produceData.filter(p => p.category === chosenCategory);
-        gameState.currentTree[randInt] = BEE_CATEGORY;
-        const randomProduce = produceCategory[Math.floor(Math.random() * produceCategory.length)];
-
-        return { produce: randomProduce, isBee: false };
-    }
-
     function resetBasket() {
         gameState.basket = [];
         gameState.basketCounts = {};
-        gameState.currentTree = shuffleArray(treeData);
-    }
-
-    function calculateEarnings() {
-        const baseEarnings = gameState.basket.reduce((sum, item) => {
-            return sum + getRandomValue(item.min, item.max);
-        }, 0);
-
-        if (!clonkData?.boost) {
-            return { baseEarnings, bonusEarnings: 0 };
-        }
-
-        const boost = clonkData.boost > 0
-            ? clonkData.boost / 10
-            : Math.abs(clonkData.boost) / 50;
-
-        const copFishRatio = Math.max(0, Number(clonkData.copFishRatio || 0));
-        const boostPlusRatio = boost + copFishRatio;
-        const bonusEarnings = boostPlusRatio > 1 ? Math.round(baseEarnings / boostPlusRatio) : 0;
-
-        return { baseEarnings, bonusEarnings };
     }
 
     function startCooldown(buttonElement, isBeeEncounter = false) {
@@ -168,26 +142,39 @@
     }
 
     // Event handlers
-    function shakeTree(event) {
+    async function handleShakeTree(event) {
         if (!hasTurns) return;
 
-        const { produce, isBee } = selectProduceFromTree();
+        uiState.isButtonDisabled = true;
+        const buttonElement = event.target;
+        buttonElement.innerText = "Shaking...";
 
-        if (isBee) {
-            resetBasket();
-            console.log("WHOOPS YOU DIED LOL");
-        } else {
-            gameState.basket.push({
-                name: produce.name,
-                min: produce.min,
-                max: produce.max
-            });
-            gameState.lastCaughtProduce = getProduceImage(produce);
+        const result = await shakeTreeApi(user.name);
+
+        if (!result?.success) {
+            uiState.isButtonDisabled = false;
+            buttonElement.innerText = "Shake the Tree";
+            return;
         }
 
-        user.numberOfTurns -= 1;
-        updateNumberOfTurns(user.numberOfTurns, user.name);
-        startCooldown(event.target, isBee);
+        user.numberOfTurns = result.turns;
+
+        if (result.isBee) {
+            resetBasket();
+            gameState.lastCaughtProduce = getProduceImage("Bee");
+        } else {
+            const produce = getProduceByName(result.produce);
+            if (produce) {
+                gameState.basket.push({
+                    name: produce.name,
+                    min: produce.min,
+                    max: produce.max
+                });
+            }
+            gameState.lastCaughtProduce = getProduceImage(result.produce);
+        }
+
+        startCooldown(buttonElement, result.isBee);
     }
 
     function handleCountsUpdate(counts) {
@@ -195,22 +182,23 @@
     }
 
     async function sellItems() {
-        const { baseEarnings, bonusEarnings } = calculateEarnings();
-        const totalEarnings = baseEarnings + bonusEarnings;
-
-        user.balance += totalEarnings;
-
-        uiState.sellingLabelText = bonusEarnings > 0
-            ? `You made §${baseEarnings} plus an extra §${bonusEarnings}`
-            : `You made §${baseEarnings}`;
-
         uiState.isSelling = true;
 
-        // Update backend
-        await Promise.all([
-            updateBalance(user.balance, user.name),
+        const [sellResult] = await Promise.all([
+            sellBasket(user.name, clonkData),
             updateObtainedProduce(gameState.basketCounts, user.name)
         ]);
+
+        if (sellResult) {
+            user.balance = sellResult.balance;
+            const { baseEarnings, bonusEarnings } = sellResult;
+
+            uiState.sellingLabelText = bonusEarnings > 0
+                ? `You made §${baseEarnings} plus an extra §${bonusEarnings}`
+                : `You made §${baseEarnings}`;
+        } else {
+            uiState.sellingLabelText = "Failed to sell items";
+        }
 
         resetBasket();
 
@@ -240,15 +228,15 @@
                     type="button"
                     class="shake-tree"
                     disabled={uiState.isButtonDisabled}
-                    onclick={shakeTree}
+                    onclick={handleShakeTree}
             >
                 Shake the Tree
             </button>
         {/if}
 
         {#if canSellItems}
-            <button type="button" class="sell-items" onclick={sellItems}>
-                Sell Items (§{basketValue.min} - §{basketValue.max}) {clonkData ? "*" : ""}
+            <button type="button" class="sell-items" onclick={sellItems} disabled={uiState.isSelling}>
+                {uiState.isSelling ? "Selling..." : `Sell Items (§${basketValue.min} - §${basketValue.max}) ${clonkData ? "*" : ""}`}
             </button>
         {/if}
     </div>

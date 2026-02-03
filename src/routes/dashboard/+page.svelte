@@ -5,12 +5,12 @@
     import ProduceImages from "$lib/components/Dashboard/ProduceImages.svelte";
     import PurchaseFruitButton from "$lib/components/Dashboard/PurchaseFruitButton.svelte";
 
-    const {data} = $props();
-    const produceImages = data.images.filter(image => image.name !== "Bee");
-    const name = data.username;
-    const userData = data.obtainedProduceData;
-    const userBalance = data.userBalance;
-    const numberOfProduce = Object.values(userData).filter(value => value !== 0).length;
+    let {data} = $props();
+    const produceImages = $derived(data.images.filter(image => image.name !== "Bee"));
+    const name = $derived(data.username);
+    const userData = $derived(data.obtainedProduceData);
+    const userBalance = $derived(data.userBalance);
+    const numberOfProduce = $derived(Object.values(userData).filter(value => value !== 0).length);
 </script>
 
 <Title text={name}/>

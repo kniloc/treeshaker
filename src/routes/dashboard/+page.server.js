@@ -1,5 +1,5 @@
 import {getProduceImages} from "$lib/server/imageUtils.js";
-import {getObtainedProduceData, getUserBalance} from "$lib/server/userUtils.js";
+import {getObtainedProduceData, getUserBalance, getUserData} from "$lib/server/userUtils.js";
 
 export async function load({locals}) {
     const session = locals.session;
@@ -7,12 +7,13 @@ export async function load({locals}) {
     const produceImages = await getProduceImages();
     const username = session.user.name.toLowerCase();
     const obtainedProduceData = await getObtainedProduceData(username);
-    const userBalance = await getUserBalance(username);
+    const userData = await getUserData(username);
 
     return {
         images: produceImages.images,
         username,
         obtainedProduceData: obtainedProduceData[0],
-        userBalance: userBalance[0].balance
+        userBalance: userData[0].balance,
+        lastPurchasedFruit: userData[0].last_purchased_fruit
     };
 }

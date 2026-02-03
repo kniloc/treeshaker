@@ -15,17 +15,31 @@ export async function getUserData(username) {
     return query.rows;
 }
 
+const LEADERBOARD_EXCLUDED_USERS = ['colinahscopy_'];
+
 export async function getLeaderboardData() {
-    const query = await dbPool.query("SELECT name, balance FROM user_game WHERE balance > 0 ORDER BY balance DESC LIMIT 5");
+    const query = await dbPool.query(
+        "SELECT name, balance FROM user_game WHERE balance > 0 AND name != ALL($1) ORDER BY balance DESC LIMIT 5",
+        [LEADERBOARD_EXCLUDED_USERS]
+    );
     return query.rows;
 }
 
-export async function updateNumberOfTurns(turns, username) {
-    await dbPool.query("UPDATE user_game SET turns_left = $1 WHERE name = $2", [turns, username]);
+export async function decrementTurns(username) {
+    const result = await dbPool.query(
+        "UPDATE user_game SET turns_left = turns_left - 1 WHERE name = $1 AND turns_left > 0 RETURNING turns_left",
+        [username]
+    );
+    return result.rows[0]?.turns_left ?? null;
 }
 
-export async function updateUserBalance(balance, username) {
-    await dbPool.query("UPDATE user_game SET balance = $1 WHERE name = $2", [balance, username]);
+export async function addToBalance(amount, username) {
+    if (amount <= 0) return null;
+    const result = await dbPool.query(
+        "UPDATE user_game SET balance = balance + $1 WHERE name = $2 RETURNING balance",
+        [amount, username]
+    );
+    return result.rows[0]?.balance ?? null;
 }
 
 export async function updateObtainedProduce(produceData, username) {
