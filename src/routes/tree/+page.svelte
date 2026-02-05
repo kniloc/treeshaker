@@ -6,19 +6,19 @@
     import Basket from "$lib/components/Tree/Basket.svelte";
     import { produceData } from "$lib/components/LocalData/data.js";
     import { shakeTree as shakeTreeApi, sellBasket, updateObtainedProduce, fetchUserData } from "$lib/clientUtils.js";
-    import { createUserDataSubscription } from "$lib/pollingUtils.js";
+    import { createUserDataSubscription } from "$lib/realtimeUtils.js";
 
     // Constants
     const DEV_MODE = import.meta.env.DEV;
     const COOLDOWN_DURATION_SECONDS = DEV_MODE ? 3 : 60;
     const BEE_COOLDOWN_DURATION_SECONDS = DEV_MODE ? 5 : 120;
     const SELLING_MESSAGE_DURATION_MS = 5000;
-
     const MINIMUM_ITEMS_TO_SELL = 5;
 
     const { data } = $props();
 
-    // State management - initialized once from props
+    // State management
+    let isLoading = $state(true);
     let initialized = false;
     let user = $state({
         name: '',
@@ -50,6 +50,7 @@
         showBasket: false,
         showNavigation: true,
         isSelling: false,
+        shakeButtonText: "Shake the Tree",
     });
 
     // Derived values
@@ -62,13 +63,18 @@
     const turnsLabel = $derived(user.numberOfTurns === 1 ? "turn" : "turns");
     const clonkData = $derived(data.clonkData);
     const canSellItems = $derived(gameState.basket.length >= MINIMUM_ITEMS_TO_SELL);
+    const turnsAnnouncement = $derived(`${user.numberOfTurns} ${turnsLabel} remaining`);
 
     let userDataSubscription;
+    let connectionError = $state(null);
 
     // Lifecycle
     onMount(async () => {
         const userName = data.user?.name;
-        if (!userName) return;
+        if (!userName) {
+            isLoading = false;
+            return;
+        }
 
         const freshData = await fetchUserData(userName);
         if (freshData) {
@@ -81,9 +87,13 @@
             (updatedData) => {
                 user.numberOfTurns = updatedData.turns;
                 user.balance = updatedData.balance;
+            },
+            (error) => {
+                connectionError = error;
             }
         );
         userDataSubscription.start();
+        isLoading = false;
     });
 
     onDestroy(() => {
@@ -115,7 +125,7 @@
         gameState.basketCounts = {};
     }
 
-    function startCooldown(buttonElement, isBeeEncounter = false) {
+    function startCooldown(isBeeEncounter = false) {
         uiState.isButtonDisabled = true;
         uiState.showBasket = true;
         uiState.showNavigation = false;
@@ -127,33 +137,32 @@
             const msRemaining = endTime - Date.now();
             if (msRemaining <= 0) {
                 clearInterval(gameState.cooldownTimer);
-                resetCooldown(buttonElement);
+                resetCooldown();
             } else {
-                buttonElement.innerText = formatCountdownTime(msRemaining);
+                uiState.shakeButtonText = formatCountdownTime(msRemaining);
             }
         }, 50);
     }
 
-    function resetCooldown(buttonElement) {
+    function resetCooldown() {
         uiState.isButtonDisabled = false;
         uiState.showBasket = false;
         uiState.showNavigation = true;
-        buttonElement.innerText = "Shake the Tree";
+        uiState.shakeButtonText = "Shake the Tree";
     }
 
     // Event handlers
-    async function handleShakeTree(event) {
+    async function handleShakeTree() {
         if (!hasTurns) return;
 
         uiState.isButtonDisabled = true;
-        const buttonElement = event.target;
-        buttonElement.innerText = "Shaking...";
+        uiState.shakeButtonText = "Shaking...";
 
         const result = await shakeTreeApi(user.name);
 
         if (!result?.success) {
             uiState.isButtonDisabled = false;
-            buttonElement.innerText = "Shake the Tree";
+            uiState.shakeButtonText = "Shake the Tree";
             return;
         }
 
@@ -174,7 +183,7 @@
             gameState.lastCaughtProduce = getProduceImage(result.produce);
         }
 
-        startCooldown(buttonElement, result.isBee);
+        startCooldown(result.isBee);
     }
 
     function handleCountsUpdate(counts) {
@@ -210,51 +219,70 @@
     }
 </script>
 
-<Title text="the tree"/>
-{#if hasTurns}
-    <Header text="Hi, {user.name}! You have {user.numberOfTurns} {turnsLabel} left."/>
-{:else}
-    <Header text="You have no turns! Go redeem some more in chat." isLink={true}/>
+{#if connectionError}
+    <div class="connection-error" role="alert">{connectionError}</div>
 {/if}
 
-<main>
-    {#if uiState.showNavigation}
-        <Navigation/>
+{#if isLoading}
+    <div class="loading" aria-live="polite">Loading...</div>
+{:else}
+    <Title text="the tree"/>
+    {#if hasTurns}
+        <Header text="Hi, {user.name}! You have {user.numberOfTurns} {turnsLabel} left."/>
+    {:else}
+        <Header text="You have no turns! Go redeem some more in chat." isLink={true}/>
     {/if}
 
-    <div class="button-container">
-        {#if hasTurns}
-            <button
+    <main>
+        <div class="sr-only" aria-live="polite">{turnsAnnouncement}</div>
+
+        {#if uiState.showNavigation}
+            <Navigation/>
+        {/if}
+
+        <div class="button-container" role="group" aria-label="Game actions">
+            {#if hasTurns}
+                <button
                     type="button"
                     class="shake-tree"
                     disabled={uiState.isButtonDisabled}
+                    aria-disabled={uiState.isButtonDisabled}
+                    aria-label="Shake the tree to collect produce"
                     onclick={handleShakeTree}
-            >
-                Shake the Tree
-            </button>
-        {/if}
+                >
+                    {uiState.shakeButtonText}
+                </button>
+            {/if}
 
-        {#if canSellItems}
-            <button type="button" class="sell-items" onclick={sellItems} disabled={uiState.isSelling}>
-                {uiState.isSelling ? "Selling..." : `Sell Items (§${basketValue.min} - §${basketValue.max}) ${clonkData ? "*" : ""}`}
-            </button>
-        {/if}
-    </div>
+            {#if canSellItems}
+                <button
+                    type="button"
+                    class="sell-items"
+                    onclick={sellItems}
+                    disabled={uiState.isSelling}
+                    aria-disabled={uiState.isSelling}
+                    aria-label="Sell collected items for {basketValue.min} to {basketValue.max} coins"
+                >
+                    {uiState.isSelling ? "Selling..." : `Sell Items (§${basketValue.min} - §${basketValue.max}) ${clonkData ? "*" : ""}`}
+                </button>
+            {/if}
+        </div>
 
-    {#if uiState.showBasket}
-        <Basket
+        {#if uiState.showBasket}
+            <Basket
                 caught={gameState.lastCaughtProduce}
                 basket={gameState.basket}
                 onCountsUpdate={handleCountsUpdate}
-        />
-    {/if}
+            />
+        {/if}
 
-    {#if uiState.isSelling}
-        <h3 class="selling-label">{uiState.sellingLabelText}</h3>
-    {/if}
+        {#if uiState.isSelling}
+            <h3 class="selling-label" aria-live="polite">{uiState.sellingLabelText}</h3>
+        {/if}
 
-    <img class="the-tree" src="/the-tree.png" alt="a tree"/>
-</main>
+        <img class="the-tree" src="/the-tree.png" alt="A fruit tree ready to be shaken"/>
+    </main>
+{/if}
 
 <style>
     .shake-tree, .sell-items {
@@ -273,6 +301,11 @@
             cursor: not-allowed;
             opacity: 0.5;
         }
+
+        &:focus-visible {
+            outline: 2px solid var(--color-deep-forest);
+            outline-offset: 2px;
+        }
     }
 
     .the-tree {
@@ -284,6 +317,26 @@
         display: flex;
         align-items: center;
         flex-direction: column;
+    }
+
+    .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+        font-size: 24px;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
     }
 
     /* Mobile styles */
@@ -308,5 +361,13 @@
             display: flex;
             gap: 10px;
         }
+    }
+
+    .connection-error {
+        background-color: #f44336;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        font-size: 14px;
     }
 </style>

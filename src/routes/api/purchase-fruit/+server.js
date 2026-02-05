@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { dbPool } from "$lib/auth.js";
 import { dev } from "$app/environment";
+import { requireAuth } from "$lib/server/authUtils.js";
 
 const COOLDOWN_MS = dev ? 60 * 1000 : 12 * 60 * 60 * 1000;
 
@@ -15,13 +16,16 @@ function calculatePurchasePrice(remainingCount) {
     return Math.ceil(price);
 }
 
-export async function POST({ request }) {
+export async function POST({ request, locals }) {
     try {
         const { userName } = await request.json();
 
         if (!userName) {
             return json({ error: 'Invalid parameters' }, { status: 400 });
         }
+
+        const auth = requireAuth(locals, userName);
+        if (auth.error) return auth.error;
 
         const userResult = await dbPool.query(
             "SELECT balance, last_purchased_fruit FROM user_game WHERE name = $1",

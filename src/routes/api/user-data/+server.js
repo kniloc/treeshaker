@@ -1,13 +1,17 @@
 import { json } from "@sveltejs/kit";
 import { getUserData } from "$lib/server/userUtils.js";
+import { requireAuth } from "$lib/server/authUtils.js";
 
-export async function POST({ request }) {
+export async function POST({ request, locals }) {
     try {
         const { userName } = await request.json();
 
         if (!userName) {
             return json({ error: 'Invalid parameters' }, { status: 400 });
         }
+
+        const auth = requireAuth(locals, userName);
+        if (auth.error) return auth.error;
 
         const users = await getUserData(userName);
         const userData = users.find(user => user.name === userName);

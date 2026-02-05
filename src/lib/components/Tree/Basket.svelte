@@ -1,32 +1,35 @@
 <script>
     let {caught, basket, onCountsUpdate} = $props();
 
-    const names = basket.map(item =>item.name);
+    const names = $derived(basket.map(item => item.name));
 
-    const groupProduceItems = (arr) => {
-        const counts = {};
+    const counts = $derived(() => {
+        const result = {};
+        for (const item of names) {
+            result[item] = (result[item] || 0) + 1;
+        }
+        return result;
+    });
+
+    $effect(() => {
+        if (onCountsUpdate) {
+            onCountsUpdate(counts());
+        }
+    });
+
+    const formattedList = $derived(() => {
+        if (!names.length) return "(empty)";
+        
         const result = [];
-
-        if(onCountsUpdate) {
-            onCountsUpdate(counts);
-        }
-
-        for (const item of arr) {
-            counts[item] = (counts[item] || 0) + 1;
-        }
-
-        for (const [item, count] of Object.entries(counts)) {
-            if(count > 1) {
+        for (const [item, count] of Object.entries(counts())) {
+            if (count > 1) {
                 result.push(`${item} (${count})`);
             } else {
                 result.push(item);
             }
         }
-
         return result.join(", ");
-    };
-
-    const formattedList = names.length ? groupProduceItems(names) : `(empty)`;
+    });
 </script>
 
 
@@ -37,7 +40,7 @@
     </div>
     <div class="basket-items">
         <h2 class="basket-title">Current Basket:</h2>
-        <span class="basket-list">{formattedList}</span>
+        <span class="basket-list">{formattedList()}</span>
     </div>
 </div>
 

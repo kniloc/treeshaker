@@ -11,19 +11,26 @@
     const userData = $derived(data.obtainedProduceData);
     const userBalance = $derived(data.userBalance);
     const numberOfProduce = $derived(Object.values(userData).filter(value => value !== 0).length);
+    const isLoading = $derived(!data.username);
 </script>
 
-<Title text={name}/>
-<main>
-    <InfoContainer name={name} balance={userBalance} numberOfProduce={numberOfProduce}/>
-    <div class="dashboard-buttons">
-        <ButtonStyledLink text="To the Tree!" link="/tree"/>
-        {#if numberOfProduce >= 35 && name === "colinahscopy_"}
-            <PurchaseFruitButton data={data}/>
-        {/if}
-    </div>
-    <ProduceImages images={produceImages} data={userData}/>
-</main>
+{#if isLoading}
+    <div class="loading" aria-live="polite">Loading dashboard...</div>
+{:else}
+    <Title text={name}/>
+    <main aria-label="User dashboard">
+        <InfoContainer name={name} balance={userBalance} numberOfProduce={numberOfProduce}/>
+        <nav class="dashboard-buttons" aria-label="Dashboard navigation">
+            <ButtonStyledLink text="To the Tree!" link="/tree"/>
+            {#if numberOfProduce >= 35}
+                <PurchaseFruitButton data={data}/>
+            {/if}
+        </nav>
+        <section aria-label="Collected produce">
+            <ProduceImages images={produceImages} data={userData}/>
+        </section>
+    </main>
+{/if}
 
 <style>
     main {
@@ -35,5 +42,13 @@
     .dashboard-buttons {
         display: flex;
         gap: 10px;
+    }
+
+    .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+        font-size: 24px;
     }
 </style>

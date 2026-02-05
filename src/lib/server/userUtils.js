@@ -1,4 +1,7 @@
 import {dbPool} from "$lib/auth.js";
+import {produceData} from "$lib/server/produceData.js";
+
+const allowedColumnNames = produceData.map(item => item.name.toLowerCase());
 
 export async function getObtainedProduceData(username) {
     const query = await dbPool.query("SELECT * FROM obtained_produce WHERE name = $1", [username]);
@@ -43,8 +46,18 @@ export async function addToBalance(amount, username) {
 }
 
 export async function updateObtainedProduce(produceData, username) {
-    const setValues = Object.entries(produceData).map(([field, value]) => `${field.toLowerCase()} = ${field.toLowerCase()} + ${value}`).join(", ");
-    await dbPool.query(`UPDATE obtained_produce SET ${setValues} WHERE name = $1`, [username]);
+    const updates = [];
+
+    for (const [field, count] of Object.entries(produceData)) {
+        const column = field.toLowerCase();
+        if (!allowedColumnNames.includes(column)) continue;
+        if (!Number.isInteger(count) || count < 0 ) continue;
+
+        updates.push(`${column} = ${column} + ${count}`)
+    }
+
+    if (updates.length === 0) return;
+    await dbPool.query(`UPDATE obtained_produce SET ${updates.join(", ")} WHERE name = $1`, [username]);
 }
 
 export async function updateTimestamp(username) {

@@ -2,14 +2,18 @@ import {json} from "@sveltejs/kit";
 import {addToBalance} from "$lib/server/userUtils.js";
 import {calculateEarnings} from "$lib/server/produceData.js";
 import {getUserBasket, resetUserState} from "$lib/server/treeState.js";
+import {requireAuth} from "$lib/server/authUtils.js";
 
-export async function POST({request}) {
+export async function POST({request, locals}) {
     try {
         const { userName, clonkData } = await request.json();
 
         if(!userName) {
             return json({ error: 'Invalid parameters' }, {status: 400});
         }
+
+        const auth = requireAuth(locals, userName);
+        if (auth.error) return auth.error;
 
         const basketItems = getUserBasket(userName);
 

@@ -17,9 +17,17 @@
 
 <Title text="Welcome to Tree Shaker"/>
 <Header text="Tree Shaker"/>
-<main>
-    <LeaderBoard topFive={leaderboardData}/>
-    <button class="sign-in" onclick={signInWithTwitch}>Login with Twitch</button>
+<main aria-label="Tree Shaker home page">
+    <section aria-label="Leaderboard">
+        <LeaderBoard topFive={leaderboardData}/>
+    </section>
+    <button
+        class="sign-in"
+        onclick={signInWithTwitch}
+        aria-label="Sign in with your Twitch account"
+    >
+        Login with Twitch
+    </button>
 </main>
 
 <style>
@@ -39,5 +47,10 @@
         padding: 4px 0;
         font-size: 20px;
         cursor: pointer;
+
+        &:focus-visible {
+            outline: 2px solid var(--color-golden-acorn);
+            outline-offset: 2px;
+        }
     }
 </style>
