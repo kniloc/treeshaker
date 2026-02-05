@@ -6,6 +6,9 @@ export const supabase = createClient(
     {
         auth: {
             persistSession: false
+        },
+        realtime: {
+            timeout: 30000,
         }
     }
 );

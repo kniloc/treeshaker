@@ -1,12 +1,33 @@
 import { supabase } from '$lib/supabase.js'
+import { fetchUserData } from '$lib/clientUtils.js'
 
-const MAX_RECONNECT_ATTEMPTS = 5;
+const MAX_RECONNECT_ATTEMPTS = 3;
 const RECONNECT_DELAY_MS = 2000;
+const POLLING_INTERVAL_MS = 15000;
 
-export function createUserDataSubscription(userName, callback, onError) {
+export function createUserDataSubscription(userName, callback) {
     let channel = null;
     let reconnectAttempts = 0;
     let reconnectTimeout = null;
+    let pollingInterval = null;
+    let usePolling = false;
+
+    const startPolling = () => {
+        if (pollingInterval) return;
+        console.log('Falling back to polling for updates');
+        usePolling = true;
+        
+        pollingInterval = setInterval(async () => {
+            const data = await fetchUserData(userName);
+            if (data) {
+                callback({
+                    turns: data.turns,
+                    balance: data.balance,
+                    lastPurchasedFruit: data.lastPurchasedFruit
+                });
+            }
+        }, POLLING_INTERVAL_MS);
+    }
 
     const start = () => {
         channel = supabase
@@ -31,10 +52,12 @@ export function createUserDataSubscription(userName, callback, onError) {
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
                     reconnectAttempts = 0;
-                } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                    console.error(`Realtime subscription error: ${status}`);
-                    handleReconnect();
-                } else if (status === 'CLOSED') {
+                    if (pollingInterval) {
+                        clearInterval(pollingInterval);
+                        pollingInterval = null;
+                        usePolling = false;
+                    }
+                } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
                     handleReconnect();
                 }
             });
@@ -42,24 +65,26 @@ export function createUserDataSubscription(userName, callback, onError) {
 
     const handleReconnect = () => {
         if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-            console.error('Max reconnection attempts reached');
-            onError?.('Connection lost. Please refresh the page.');
+            startPolling();
             return;
         }
 
         reconnectAttempts++;
-        console.log(`Reconnecting... attempt ${reconnectAttempts}`);
         
         reconnectTimeout = setTimeout(() => {
             stop();
             start();
-        }, RECONNECT_DELAY_MS * reconnectAttempts);
+        }, RECONNECT_DELAY_MS);
     }
 
     const stop = () => {
         if (reconnectTimeout) {
             clearTimeout(reconnectTimeout);
             reconnectTimeout = null;
+        }
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
         }
         if (channel) {
             supabase.removeChannel(channel);
