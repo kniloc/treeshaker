@@ -6,7 +6,7 @@
     import Basket from "$lib/components/Tree/Basket.svelte";
     import { produceData } from "$lib/components/LocalData/data.js";
     import { shakeTree as shakeTreeApi, sellBasket, updateObtainedProduce, fetchUserData } from "$lib/clientUtils.js";
-    import { createUserDataSubscription } from "$lib/realtimeUtils.js";
+    import { createUserDataSubscription } from "$lib/subscriptionUtils.js";
 
     // Constants
     const DEV_MODE = import.meta.env.DEV;

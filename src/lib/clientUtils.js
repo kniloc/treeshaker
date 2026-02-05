@@ -37,11 +37,6 @@ export async function updateObtainedProduce(produceData, userName) {
     return result.data;
 }
 
-export async function updateTimestamp(userName) {
-    const result = await apiRequest('/api/update-timestamp', { userName });
-    return result.success;
-}
-
 export async function fetchUserData(userName) {
     const result = await apiRequest('/api/user-data', { userName });
     if (!result.success) return null;
