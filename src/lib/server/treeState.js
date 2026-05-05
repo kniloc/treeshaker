@@ -21,29 +21,29 @@ function shuffleArray(arr) {
     return result;
 }
 
-function getOrCreateTree(username) {
-    if (!userTrees.has(username)) {
-        userTrees.set(username, shuffleArray([...treeDistribution]));
+function getOrCreateTree(twitchId) {
+    if (!userTrees.has(twitchId)) {
+        userTrees.set(twitchId, shuffleArray([...treeDistribution]));
     }
-    return userTrees.get(username);
+    return userTrees.get(twitchId);
 }
 
-function getOrCreateBasket(username) {
-    if (!userBaskets.has(username)) {
-        userBaskets.set(username, []);
+function getOrCreateBasket(twitchId) {
+    if (!userBaskets.has(twitchId)) {
+        userBaskets.set(twitchId, []);
     }
-    return userBaskets.get(username);
+    return userBaskets.get(twitchId);
 }
 
-export function shakeTree(username) {
-    const tree = getOrCreateTree(username);
-    const basket = getOrCreateBasket(username);
+export function shakeTree(twitchId) {
+    const tree = getOrCreateTree(twitchId);
+    const basket = getOrCreateBasket(twitchId);
 
     const randInt = Math.floor(Math.random() * tree.length);
     const chosenCategory = tree[randInt];
 
     if (chosenCategory === "Bee") {
-        resetUserState(username);
+        resetUserState(twitchId);
         return { isBee: true, produce: null, basket: [] };
     }
 
@@ -56,11 +56,11 @@ export function shakeTree(username) {
     return { isBee: false, produce: randomProduce.name, basket: [...basket] };
 }
 
-export function getUserBasket(username) {
-    return userBaskets.get(username) || [];
+export function getUserBasket(twitchId) {
+    return userBaskets.get(twitchId) || [];
 }
 
-export function resetUserState(username) {
-    userTrees.delete(username);
-    userBaskets.delete(username);
+export function resetUserState(twitchId) {
+    userTrees.delete(twitchId);
+    userBaskets.delete(twitchId);
 }

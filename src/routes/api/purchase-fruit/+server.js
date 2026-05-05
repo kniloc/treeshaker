@@ -18,18 +18,18 @@ function calculatePurchasePrice(remainingCount) {
 
 export async function POST({ request, locals }) {
     try {
-        const { userName } = await request.json();
+        const { twitchId } = await request.json();
 
-        if (!userName) {
+        if (!twitchId) {
             return json({ error: 'Invalid parameters' }, { status: 400 });
         }
 
-        const auth = requireAuth(locals, userName);
+        const auth = await requireAuth(locals, twitchId);
         if (auth.error) return auth.error;
 
         const userResult = await dbPool.query(
-            "SELECT balance, last_purchased_fruit FROM user_game WHERE name = $1",
-            [userName]
+            "SELECT balance, last_purchased_fruit FROM user_game WHERE user_id = $1",
+            [twitchId]
         );
 
         if (userResult.rows.length === 0) {
@@ -47,8 +47,8 @@ export async function POST({ request, locals }) {
         }
 
         const produceResult = await dbPool.query(
-            "SELECT * FROM obtained_produce WHERE name = $1",
-            [userName]
+            "SELECT * FROM obtained_produce WHERE user_id = $1",
+            [twitchId]
         );
 
         if (produceResult.rows.length === 0) {
@@ -57,7 +57,7 @@ export async function POST({ request, locals }) {
 
         const produceData = produceResult.rows[0];
         const remainingProduce = Object.keys(produceData)
-            .filter(key => key !== 'name' && produceData[key] === 0);
+            .filter(key => key !== 'user_id' && produceData[key] === 0);
 
         if (remainingProduce.length === 0) {
             return json({ error: 'No produce remaining to unlock' }, { status: 400 });
@@ -73,13 +73,13 @@ export async function POST({ request, locals }) {
         const unlockedFruit = remainingProduce[randomIndex];
 
         await dbPool.query(
-            `UPDATE user_game SET balance = balance - $1, last_purchased_fruit = NOW() WHERE name = $2`,
-            [price, userName]
+            `UPDATE user_game SET balance = balance - $1, last_purchased_fruit = NOW() WHERE user_id = $2`,
+            [price, twitchId]
         );
 
         await dbPool.query(
-            `UPDATE obtained_produce SET ${unlockedFruit} = 1 WHERE name = $1`,
-            [userName]
+            `UPDATE obtained_produce SET ${unlockedFruit} = 1 WHERE user_id = $1`,
+            [twitchId]
         );
 
         return json({

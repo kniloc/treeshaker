@@ -21,11 +21,15 @@ export const auth = betterAuth({
         }
     },
     databaseHooks: {
-        user: {
+        account: {
             create: {
-                after: async (user) => {
-                    await dbPool.query("INSERT INTO obtained_produce (name) values ($1) ON CONFLICT (name) DO NOTHING", [user.name.toLowerCase()]);
-                    await dbPool.query("INSERT INTO user_game (name, turns_left, balance) values ($1, 10, 0) ON CONFLICT DO NOTHING", [user.name.toLowerCase()]);
+                after: async (account) => {
+                    const twitchId = account.accountId;
+                    await dbPool.query("INSERT INTO obtained_produce (user_id) VALUES ($1) ON CONFLICT DO NOTHING", [twitchId]);
+                    await dbPool.query(
+                        "INSERT INTO user_game (user_id, turns_left, balance) VALUES ($1, 10, 0) ON CONFLICT DO NOTHING",
+                        [twitchId]
+                    );
                 }
             }
         }

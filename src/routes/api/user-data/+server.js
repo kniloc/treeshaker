@@ -4,17 +4,17 @@ import { requireAuth } from "$lib/server/authUtils.js";
 
 export async function POST({ request, locals }) {
     try {
-        const { userName } = await request.json();
+        const { twitchId } = await request.json();
 
-        if (!userName) {
+        if (!twitchId) {
             return json({ error: 'Invalid parameters' }, { status: 400 });
         }
 
-        const auth = requireAuth(locals, userName);
+        const auth = await requireAuth(locals, twitchId);
         if (auth.error) return auth.error;
 
-        const users = await getUserData(userName);
-        const userData = users.find(user => user.name === userName);
+        const users = await getUserData(twitchId);
+        const userData = users[0];
 
         if (!userData) {
             return json({ error: 'User not found' }, { status: 404 });

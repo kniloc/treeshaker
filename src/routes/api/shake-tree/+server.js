@@ -5,22 +5,22 @@ import { requireAuth } from "$lib/server/authUtils.js";
 
 export async function POST({ request, locals }) {
     try {
-        const { userName } = await request.json();
+        const { twitchId } = await request.json();
 
-        if (!userName) {
+        if (!twitchId) {
             return json({ error: 'Invalid parameters' }, { status: 400 });
         }
 
-        const auth = requireAuth(locals, userName);
+        const auth = await requireAuth(locals, twitchId);
         if (auth.error) return auth.error;
 
-        const newTurns = await decrementTurns(userName);
+        const newTurns = await decrementTurns(twitchId);
 
         if (newTurns === null) {
             return json({ error: 'No turns remaining or user not found' }, { status: 400 });
         }
 
-        const result = shakeTree(userName);
+        const result = shakeTree(twitchId);
 
         return json({
             success: true,

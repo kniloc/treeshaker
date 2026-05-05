@@ -4,16 +4,16 @@ import {requireAuth} from "$lib/server/authUtils.js";
 
 export async function POST({request, locals}){
     try {
-        const {produceData, userName} = await request.json();
+        const {produceData, twitchId} = await request.json();
 
-        if(typeof produceData !== 'object' || !userName) {
+        if(typeof produceData !== 'object' || !twitchId) {
             return json({ error: 'Invalid parameters' }, {status: 400});
         }
 
-        const auth = requireAuth(locals, userName);
+        const auth = await requireAuth(locals, twitchId);
         if (auth.error) return auth.error;
 
-        await updateObtainedProduce(produceData, userName);
+        await updateObtainedProduce(produceData, twitchId);
 
         return json({ success: true });
     } catch (error) {

@@ -6,29 +6,29 @@ import {requireAuth} from "$lib/server/authUtils.js";
 
 export async function POST({request, locals}) {
     try {
-        const { userName, clonkData } = await request.json();
+        const { twitchId, clonkData } = await request.json();
 
-        if(!userName) {
+        if(!twitchId) {
             return json({ error: 'Invalid parameters' }, {status: 400});
         }
 
-        const auth = requireAuth(locals, userName);
+        const auth = await requireAuth(locals, twitchId);
         if (auth.error) return auth.error;
 
-        const basketItems = getUserBasket(userName);
+        const basketItems = getUserBasket(twitchId);
 
         if (basketItems.length < 5) {
             return json({ error: 'Need at least 5 items to sell' }, {status: 400});
         }
 
         const { baseEarnings, bonusEarnings, total } = calculateEarnings(basketItems, clonkData);
-        const newBalance = await addToBalance(total, userName);
+        const newBalance = await addToBalance(total, twitchId);
 
         if (newBalance === null) {
             return json({ error: 'Failed to update balance' }, {status: 400});
         }
 
-        resetUserState(userName);
+        resetUserState(twitchId);
 
         return json({ success: true, balance: newBalance, baseEarnings, bonusEarnings });
     } catch (error) {

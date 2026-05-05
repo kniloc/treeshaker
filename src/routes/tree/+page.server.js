@@ -1,12 +1,14 @@
 import {getUserData} from "$lib/server/userUtils.js";
 import {getProduceImages} from "$lib/server/imageUtils.js";
+import {getTwitchId} from "$lib/server/twitchUtils.js";
 
 export async function load({locals}) {
     const session = locals.session;
+    const twitchId = await getTwitchId(session.user.id);
     const currentUser = session.user.name.toLowerCase();
     let clonkData = {};
-    const users = await getUserData(currentUser);
-    const userData = users.find(user => user.name === currentUser);
+    const users = await getUserData(twitchId);
+    const userData = users[0];
     const produceImageSet = await getProduceImages();
 
     const res = await fetch(`https://api.colonq.computer/api/user/${currentUser}`);
@@ -40,6 +42,7 @@ export async function load({locals}) {
     return {
         clonkData,
         user: userData,
-        images: produceImageSet.images
+        images: produceImageSet.images,
+        twitchId
     }
 }

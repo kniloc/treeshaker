@@ -19,32 +19,32 @@ async function apiRequest(url, body) {
     }
 }
 
-export async function shakeTree(userName) {
-    const result = await apiRequest('/api/shake-tree', { userName });
+export async function shakeTree(twitchId) {
+    const result = await apiRequest('/api/shake-tree', { twitchId });
     if (!result.success) return null;
     return result.data;
 }
 
-export async function sellBasket(userName, clonkData) {
-    const result = await apiRequest('/api/update-balance', { userName, clonkData });
+export async function sellBasket(twitchId, clonkData) {
+    const result = await apiRequest('/api/update-balance', { twitchId, clonkData });
     if (!result.success) return null;
     return result.data;
 }
 
-export async function updateObtainedProduce(produceData, userName) {
-    const result = await apiRequest('/api/update-obtained-produce', { produceData, userName });
+export async function updateObtainedProduce(produceData, twitchId) {
+    const result = await apiRequest('/api/update-obtained-produce', { produceData, twitchId });
     if (!result.success) return null;
     return result.data;
 }
 
-export async function fetchUserData(userName) {
-    const result = await apiRequest('/api/user-data', { userName });
+export async function fetchUserData(twitchId) {
+    const result = await apiRequest('/api/user-data', { twitchId });
     if (!result.success) return null;
     return result.data;
 }
 
-export async function purchaseFruit(userName) {
-    const result = await apiRequest('/api/purchase-fruit', { userName });
+export async function purchaseFruit(twitchId) {
+    const result = await apiRequest('/api/purchase-fruit', { twitchId });
     if (!result.success) return null;
     return result.data;
 }

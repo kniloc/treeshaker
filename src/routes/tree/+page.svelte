@@ -70,20 +70,20 @@
 
     // Lifecycle
     onMount(async () => {
-        const userName = data.user?.name;
-        if (!userName) {
+        const twitchId = data.twitchId;
+        if (!twitchId) {
             isLoading = false;
             return;
         }
 
-        const freshData = await fetchUserData(userName);
+        const freshData = await fetchUserData(twitchId);
         if (freshData) {
             user.numberOfTurns = freshData.turns;
             user.balance = freshData.balance;
         }
 
         userDataSubscription = createUserDataSubscription(
-            userName,
+            twitchId,
             (updatedData) => {
                 user.numberOfTurns = updatedData.turns;
                 user.balance = updatedData.balance;
@@ -158,7 +158,7 @@
         uiState.isButtonDisabled = true;
         uiState.shakeButtonText = "Shaking...";
 
-        const result = await shakeTreeApi(user.name);
+        const result = await shakeTreeApi(data.twitchId);
 
         if (!result?.success) {
             uiState.isButtonDisabled = false;
@@ -194,8 +194,8 @@
         uiState.isSelling = true;
 
         const [sellResult] = await Promise.all([
-            sellBasket(user.name, clonkData),
-            updateObtainedProduce(gameState.basketCounts, user.name)
+            sellBasket(data.twitchId, clonkData),
+            updateObtainedProduce(gameState.basketCounts, data.twitchId)
         ]);
 
         if (sellResult) {

@@ -7,7 +7,7 @@
     const COOLDOWN_MS = DEV_MODE ? 60 * 1000 : 12 * 60 * 60 * 1000;
 
     let {data} = $props();
-    const name = $derived(data.username);
+    const twitchId = $derived(data.twitchId);
     const produceData = $derived(data.obtainedProduceData);
     const userBalance = $derived(data.userBalance);
     const lastPurchasedFruit = $derived(data.lastPurchasedFruit);
@@ -68,7 +68,7 @@
 
         isPurchasing = true;
         try {
-            const result = await purchaseFruit(name);
+            const result = await purchaseFruit(twitchId);
             if (result?.success) {
                 await invalidateAll();
             }

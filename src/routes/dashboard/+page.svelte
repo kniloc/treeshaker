@@ -8,6 +8,7 @@
     let {data} = $props();
     const produceImages = $derived(data.images.filter(image => image.name !== "Bee"));
     const name = $derived(data.username);
+    const twitchId = $derived(data.twitchId);
     const userData = $derived(data.obtainedProduceData);
     const userBalance = $derived(data.userBalance);
     const numberOfProduce = $derived(Object.values(userData).filter(value => value !== 0).length);

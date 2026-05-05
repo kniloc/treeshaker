@@ -2,14 +2,14 @@ import { fetchUserData } from '$lib/clientUtils.js'
 
 const POLLING_INTERVAL_MS = 15000;
 
-export function createUserDataSubscription(userName, callback) {
+export function createUserDataSubscription(twitchId, callback) {
     let pollingInterval = null;
 
     const start = () => {
         if (pollingInterval) return;
         
         pollingInterval = setInterval(async () => {
-            const data = await fetchUserData(userName);
+            const data = await fetchUserData(twitchId);
             if (data) {
                 callback({
                     turns: data.turns,
