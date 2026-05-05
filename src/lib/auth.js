@@ -24,12 +24,25 @@ export const auth = betterAuth({
         account: {
             create: {
                 after: async (account) => {
+                    if (account.providerId !== 'twitch') return;
                     const twitchId = account.accountId;
-                    await dbPool.query("INSERT INTO obtained_produce (user_id) VALUES ($1) ON CONFLICT DO NOTHING", [twitchId]);
-                    await dbPool.query(
-                        "INSERT INTO user_game (user_id, turns_left, balance) VALUES ($1, 10, 0) ON CONFLICT DO NOTHING",
-                        [twitchId]
-                    );
+                    try {
+                        const userResult = await dbPool.query(
+                            `SELECT name FROM "user" WHERE id = $1`,
+                            [account.userId]
+                        );
+                        const name = userResult.rows[0]?.name?.toLowerCase() ?? null;
+                        await dbPool.query(
+                            "INSERT INTO obtained_produce (user_id, name) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+                            [twitchId, name]
+                        );
+                        await dbPool.query(
+                            "INSERT INTO user_game (user_id, name, turns_left, balance) VALUES ($1, $2, 10, 0) ON CONFLICT DO NOTHING",
+                            [twitchId, name]
+                        );
+                    } catch (err) {
+                        console.error('[auth] failed to create game rows for twitchId', twitchId, err);
+                    }
                 }
             }
         }
