@@ -3,8 +3,8 @@
     import { purchaseFruit } from "$lib/clientUtils.js";
     import {invalidateAll} from "$app/navigation";
     import {
-        PURCHASE_COOLDOWN_MS,
-        PURCHASE_COOLDOWN_MS_DEV,
+        PURCHASE_COOLDOWN,
+        PURCHASE_COOLDOWN_DEV,
         PURCHASE_BASE_PRICE,
         PURCHASE_MAX_PRICE,
         PURCHASE_MIN_REMAINING,
@@ -12,7 +12,7 @@
     } from "$lib/gameConfig.js";
 
     const DEV_MODE = import.meta.env.DEV;
-    const COOLDOWN_MS = DEV_MODE ? PURCHASE_COOLDOWN_MS_DEV : PURCHASE_COOLDOWN_MS;
+    const COOLDOWN_MS = DEV_MODE ? PURCHASE_COOLDOWN_DEV : PURCHASE_COOLDOWN;
 
     let {data} = $props();
     const twitchId = $derived(data.twitchId);

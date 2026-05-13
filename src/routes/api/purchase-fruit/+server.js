@@ -5,15 +5,15 @@ import {BETTER_AUTH_URL} from "$env/static/private";
 import {json} from "@sveltejs/kit";
 import {dbPool} from "$lib/auth.js";
 import {
-    PURCHASE_COOLDOWN_MS,
-    PURCHASE_COOLDOWN_MS_DEV,
+    PURCHASE_COOLDOWN,
+    PURCHASE_COOLDOWN_DEV,
     PURCHASE_BASE_PRICE,
     PURCHASE_MAX_PRICE,
     PURCHASE_MIN_REMAINING,
     PURCHASE_MAX_REMAINING,
 } from "$lib/gameConfig.js";
 
-const COOLDOWN = dev ? PURCHASE_COOLDOWN_MS_DEV : PURCHASE_COOLDOWN_MS;
+const COOLDOWN = dev ? PURCHASE_COOLDOWN_DEV : PURCHASE_COOLDOWN;
 const validProduceColumns = new Set(produceData.map(p => p.name.toLowerCase()));
 
 function calculatePurchasePrice(remainingCount) {

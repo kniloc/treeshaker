@@ -4,8 +4,8 @@ export const MIN_BASKET_SIZE = 5;
 
 export const PRODUCE_PURCHASE_THRESHOLD = 35;
 
-export const PURCHASE_COOLDOWN_MS = 12 * 60 * 60 * 1000;
-export const PURCHASE_COOLDOWN_MS_DEV = 60 * 1000;
+export const PURCHASE_COOLDOWN = 12 * 60 * 60 * 1000;
+export const PURCHASE_COOLDOWN_DEV = 60 * 1000;
 
 export const PURCHASE_BASE_PRICE = 150;
 export const PURCHASE_MAX_PRICE = 20000;
