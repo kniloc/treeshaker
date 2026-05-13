@@ -6,26 +6,21 @@ import {produceData} from "$lib/server/produceData.js";
 export async function load({locals}) {
     const session = locals.session;
     const twitchId = await getTwitchId(session.user.id);
-    const currentUser = session.user.name.toLowerCase();
     let clonkData = {};
     const users = await getUserData(twitchId);
     const userData = users[0];
     const produceImageSet = await getProduceImages();
     const boostSoundUrl = await getBoostSound();
 
-    const res = await fetch(`https://api.colonq.computer/api/user/${currentUser}`);
+    const res = await fetch(`https://api.colonq.computer/api/user/info/${twitchId}`);
 
     if(res.ok) {
-        const data = await res.text();
+        const data = await res.json();
 
         if(data) {
-            const boost = data.match(/:boost.*?(\d+)/);
+            const boost = data.properties.boost;
 
-            if(boost) {
-                clonkData.boost = parseInt(boost[1], 10);
-            } else {
-                clonkData.boost = null;
-            }
+            clonkData.boost = boost ? parseInt(boost, 10) : null;
         }
     } else {
         console.error(`error: ${res.status}`);
