@@ -13,3 +13,11 @@ export async function requireAuth(locals, twitchId) {
     }
     return { user: session.user };
 }
+
+export function checkOrigin(request, allowedOrigin) {
+    const origin = request.headers.get('origin');
+    if (!origin || origin !== allowedOrigin) {
+        return json({error: 'Forbidden'}, {status: 403});
+    }
+    return null;
+}

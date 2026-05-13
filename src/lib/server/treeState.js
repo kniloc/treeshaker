@@ -1,13 +1,9 @@
 import { produceData } from "./produceData.js";
+import { TREE_DISTRIBUTION } from "$lib/gameConfig.js";
 
-const treeDistribution = [
-    ...Array(39).fill("Common Crops"),
-    ...Array(24).fill("Market Favorites"),
-    ...Array(16).fill("Gourmet Selection"),
-    ...Array(10).fill("Exotic Treasures"),
-    ...Array(6).fill("Rare Delicacies"),
-    ...Array(5).fill("Bee")
-];
+const treeDistribution = Object.entries(TREE_DISTRIBUTION).flatMap(
+    ([category, count]) => Array(count).fill(category)
+);
 
 const userTrees = new Map();
 const userBaskets = new Map();

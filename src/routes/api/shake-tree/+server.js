@@ -1,10 +1,14 @@
 import { json } from "@sveltejs/kit";
 import { decrementTurns } from "$lib/server/userUtils.js";
 import { shakeTree } from "$lib/server/treeState.js";
-import { requireAuth } from "$lib/server/authUtils.js";
+import { requireAuth, checkOrigin } from "$lib/server/authUtils.js";
+import { BETTER_AUTH_URL } from "$env/static/private";
 
 export async function POST({ request, locals }) {
     try {
+        const csrfError = checkOrigin(request, BETTER_AUTH_URL);
+        if (csrfError) return csrfError;
+
         const { twitchId } = await request.json();
 
         if (!twitchId) {

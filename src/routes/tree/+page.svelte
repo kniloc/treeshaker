@@ -4,16 +4,16 @@
     import Header from "$lib/components/Header.svelte";
     import Navigation from "$lib/components/Tree/Navigation.svelte";
     import Basket from "$lib/components/Tree/Basket.svelte";
-    import { produceData } from "$lib/components/LocalData/data.js";
     import { shakeTree as shakeTreeApi, sellBasket, updateObtainedProduce, fetchUserData } from "$lib/clientUtils.js";
     import { createUserDataSubscription } from "$lib/subscriptionUtils.js";
+    import { MIN_BASKET_SIZE } from "$lib/gameConfig.js";
 
     // Constants
     const DEV_MODE = import.meta.env.DEV;
     const COOLDOWN_DURATION_SECONDS = DEV_MODE ? 3 : 60;
     const BEE_COOLDOWN_DURATION_SECONDS = DEV_MODE ? 5 : 120;
     const SELLING_MESSAGE_DURATION_MS = 5000;
-    const MINIMUM_ITEMS_TO_SELL = 5;
+    const MINIMUM_ITEMS_TO_SELL = MIN_BASKET_SIZE;
 
     const { data } = $props();
 
@@ -105,7 +105,7 @@
 
     // Utility functions
     function getProduceByName(name) {
-        return produceData.find(p => p.name === name);
+        return data.produceData.find(p => p.name === name);
     }
 
     function getProduceImage(name) {
@@ -200,10 +200,14 @@
 
         if (sellResult) {
             user.balance = sellResult.balance;
-            const { baseEarnings, bonusEarnings } = sellResult;
+            const { baseEarnings, bonusEarnings, boostPct } = sellResult;
+
+            if (bonusEarnings > 0 && data.boostSoundUrl) {
+                await new Audio(data.boostSoundUrl).play();
+            }
 
             uiState.sellingLabelText = bonusEarnings > 0
-                ? `You made §${baseEarnings} plus an extra §${bonusEarnings}`
+                ? `You made §${baseEarnings} plus an extra §${bonusEarnings} (${boostPct}% boost power)`
                 : `You made §${baseEarnings}`;
         } else {
             uiState.sellingLabelText = "Failed to sell items";

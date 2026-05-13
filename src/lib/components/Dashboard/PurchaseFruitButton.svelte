@@ -2,9 +2,17 @@
     import {onMount, onDestroy} from "svelte";
     import { purchaseFruit } from "$lib/clientUtils.js";
     import {invalidateAll} from "$app/navigation";
+    import {
+        PURCHASE_COOLDOWN_MS,
+        PURCHASE_COOLDOWN_MS_DEV,
+        PURCHASE_BASE_PRICE,
+        PURCHASE_MAX_PRICE,
+        PURCHASE_MIN_REMAINING,
+        PURCHASE_MAX_REMAINING,
+    } from "$lib/gameConfig.js";
 
     const DEV_MODE = import.meta.env.DEV;
-    const COOLDOWN_MS = DEV_MODE ? 60 * 1000 : 12 * 60 * 60 * 1000;
+    const COOLDOWN_MS = DEV_MODE ? PURCHASE_COOLDOWN_MS_DEV : PURCHASE_COOLDOWN_MS;
 
     let {data} = $props();
     const twitchId = $derived(data.twitchId);
@@ -46,15 +54,9 @@
     }
 
     function calculatePurchasePrice() {
-        const basePrice = 150;
-        const targetMaxPrice = 20000;
-        const minRemaining = 1;  // Price maxes at 20k
-        const maxRemaining = 30; // Feature unlocks; price is 150
-        const ratio = (remainingProduce.length - minRemaining) / (maxRemaining - minRemaining);
-        const maxPrice = basePrice + (targetMaxPrice - basePrice) / Math.pow(1 - 1 / (maxRemaining - minRemaining), 3);
-
-        const price = basePrice + (maxPrice - basePrice) * Math.pow(1 - ratio, 3);
-
+        const ratio = (remainingProduce.length - PURCHASE_MIN_REMAINING) / (PURCHASE_MAX_REMAINING - PURCHASE_MIN_REMAINING);
+        const maxPrice = PURCHASE_BASE_PRICE + (PURCHASE_MAX_PRICE - PURCHASE_BASE_PRICE) / Math.pow(1 - 1 / (PURCHASE_MAX_REMAINING - PURCHASE_MIN_REMAINING), 3);
+        const price = PURCHASE_BASE_PRICE + (maxPrice - PURCHASE_BASE_PRICE) * Math.pow(1 - ratio, 3);
         return Math.ceil(price);
     }
 

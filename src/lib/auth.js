@@ -1,6 +1,7 @@
 import {betterAuth} from "better-auth";
 import {Pool} from "pg";
 import {AUTH_TWITCH_ID, AUTH_TWITCH_SECRET, BETTER_AUTH_URL, X_POSTGRES_URL} from "$env/static/private";
+import {STARTER_TURNS} from "$lib/gameConfig.js";
 
 export const dbPool = new Pool({
     connectionString: X_POSTGRES_URL
@@ -37,8 +38,8 @@ export const auth = betterAuth({
                             [twitchId, name]
                         );
                         await dbPool.query(
-                            "INSERT INTO user_game (user_id, name, turns_left, balance) VALUES ($1, $2, 10, 0) ON CONFLICT DO NOTHING",
-                            [twitchId, name]
+                            "INSERT INTO user_game (user_id, name, turns_left, balance) VALUES ($1, $2, $3, 0) ON CONFLICT DO NOTHING",
+                            [twitchId, name, STARTER_TURNS]
                         );
                     } catch (err) {
                         console.error('[auth] failed to create game rows for twitchId', twitchId, err);

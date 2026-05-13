@@ -85,15 +85,10 @@ export function calculateEarnings(basketItems, clonkData) {
         return { baseEarnings, bonusEarnings: 0, total: baseEarnings };
     }
 
-    const boost = clonkData.boost > 0
-        ? clonkData.boost / 10
-        : Math.abs(clonkData.boost) / 50;
+    const boostPct = Math.ceil(clonkData.boost / 10);
+    const bonusEarnings = Math.round(baseEarnings * (boostPct / 100));
 
-    const copFishRatio = Math.max(0, Number(clonkData.copFishRatio || 0));
-    const boostPlusRatio = boost + copFishRatio;
-    const bonusEarnings = boostPlusRatio > 1 ? Math.round(baseEarnings / boostPlusRatio) : 0;
-
-    return { baseEarnings, bonusEarnings, total: baseEarnings + bonusEarnings };
+    return { baseEarnings, bonusEarnings, boostPct, total: baseEarnings + bonusEarnings };
 }
 
 export function validateBasketItems(basketItems) {

@@ -1,46 +1,53 @@
-import { json } from "@sveltejs/kit";
-import { dbPool } from "$lib/auth.js";
 import { dev } from "$app/environment";
-import { requireAuth } from "$lib/server/authUtils.js";
+import {produceData} from "$lib/server/produceData.js";
+import {checkOrigin} from "$lib/server/authUtils.js";
+import {BETTER_AUTH_URL} from "$env/static/private";
+import {json} from "@sveltejs/kit";
+import {dbPool} from "$lib/auth.js";
+import {
+    PURCHASE_COOLDOWN_MS,
+    PURCHASE_COOLDOWN_MS_DEV,
+    PURCHASE_BASE_PRICE,
+    PURCHASE_MAX_PRICE,
+    PURCHASE_MIN_REMAINING,
+    PURCHASE_MAX_REMAINING,
+} from "$lib/gameConfig.js";
 
-const COOLDOWN_MS = dev ? 60 * 1000 : 12 * 60 * 60 * 1000;
+const COOLDOWN = dev ? PURCHASE_COOLDOWN_MS_DEV : PURCHASE_COOLDOWN_MS;
+const validProduceColumns = new Set(produceData.map(p => p.name.toLowerCase()));
 
 function calculatePurchasePrice(remainingCount) {
-    const basePrice = 150;
-    const targetMaxPrice = 20000;
-    const minRemaining = 1;
-    const maxRemaining = 30;
-    const ratio = (remainingCount - minRemaining) / (maxRemaining - minRemaining);
-    const maxPrice = basePrice + (targetMaxPrice - basePrice) / Math.pow(1 - 1 / (maxRemaining - minRemaining), 3);
-    const price = basePrice + (maxPrice - basePrice) * Math.pow(1 - ratio, 3);
+    const ratio = (remainingCount - PURCHASE_MIN_REMAINING) / (PURCHASE_MAX_REMAINING - PURCHASE_MIN_REMAINING);
+    const maxPrice = PURCHASE_BASE_PRICE + (PURCHASE_MAX_PRICE - PURCHASE_BASE_PRICE) / Math.pow(1 - 1 / (PURCHASE_MAX_REMAINING - PURCHASE_MIN_REMAINING), 3);
+    const price = PURCHASE_BASE_PRICE + (maxPrice - PURCHASE_BASE_PRICE) * Math.pow(1 - ratio, 3);
     return Math.ceil(price);
 }
 
-export async function POST({ request, locals }) {
+export async function POST({ request }) {
     try {
+        const csrfError = checkOrigin(request, BETTER_AUTH_URL);
+        if (csrfError) return csrfError;
+
         const { twitchId } = await request.json();
 
         if (!twitchId) {
-            return json({ error: 'Invalid parameters' }, { status: 400 });
+            return json({error: 'Invalid parameters'}, {status: 400});
         }
 
-        const auth = await requireAuth(locals, twitchId);
-        if (auth.error) return auth.error;
-
         const userResult = await dbPool.query(
-            "SELECT balance, last_purchased_fruit FROM user_game WHERE user_id = $1",
+            "select balance, last_purchased_fruit from user_game where user_id = $1",
             [twitchId]
         );
 
         if (userResult.rows.length === 0) {
-            return json({ error: 'User not found' }, { status: 404 });
+            return json({error: 'User not found'}, {status: 404});
         }
 
-        const { balance, last_purchased_fruit } = userResult.rows[0];
+        const {balance, last_purchased_fruit: last_purchased_fruit} = userResult.rows[0];
 
         if (last_purchased_fruit) {
             const lastPurchaseTime = new Date(last_purchased_fruit).getTime();
-            const nextAvailableTime = lastPurchaseTime + COOLDOWN_MS;
+            const nextAvailableTime = lastPurchaseTime + COOLDOWN;
             if (Date.now() < nextAvailableTime) {
                 return json({ error: 'Still on cooldown' }, { status: 400 });
             }
@@ -55,9 +62,9 @@ export async function POST({ request, locals }) {
             return json({ error: 'Produce data not found' }, { status: 404 });
         }
 
-        const produceData = produceResult.rows[0];
-        const remainingProduce = Object.keys(produceData)
-            .filter(key => key !== 'user_id' && produceData[key] === 0);
+        const produceRow = produceResult.rows[0];
+        const remainingProduce = Object.keys(produceRow)
+            .filter(key => key !== 'user_id' && produceRow[key] === 0);
 
         if (remainingProduce.length === 0) {
             return json({ error: 'No produce remaining to unlock' }, { status: 400 });
@@ -71,6 +78,10 @@ export async function POST({ request, locals }) {
 
         const randomIndex = Math.floor(Math.random() * remainingProduce.length);
         const unlockedFruit = remainingProduce[randomIndex];
+
+        if (!validProduceColumns.has(unlockedFruit)) {
+            return json({ error: 'Invalid produce selection' }, { status: 500 });
+        }
 
         await dbPool.query(
             `UPDATE user_game SET balance = balance - $1, last_purchased_fruit = NOW() WHERE user_id = $2`,
@@ -93,6 +104,6 @@ export async function POST({ request, locals }) {
         return json({
             error: 'Failed to purchase fruit',
             details: error.message
-        }, { status: 500 });
+        }, {status: 500});
     }
 }

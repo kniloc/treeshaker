@@ -4,6 +4,7 @@
     import InfoContainer from "$lib/components/Dashboard/InfoContainer.svelte";
     import ProduceImages from "$lib/components/Dashboard/ProduceImages.svelte";
     import PurchaseFruitButton from "$lib/components/Dashboard/PurchaseFruitButton.svelte";
+    import { PRODUCE_PURCHASE_THRESHOLD } from "$lib/gameConfig.js";
 
     let {data} = $props();
     const produceImages = $derived(data.images.filter(image => image.name !== "Bee"));
@@ -23,7 +24,7 @@
         <InfoContainer name={name} balance={userBalance} numberOfProduce={numberOfProduce}/>
         <nav class="dashboard-buttons" aria-label="Dashboard navigation">
             <ButtonStyledLink text="To the Tree!" link="/tree"/>
-            {#if numberOfProduce >= 35}
+            {#if numberOfProduce >= PRODUCE_PURCHASE_THRESHOLD}
                 <PurchaseFruitButton data={data}/>
             {/if}
         </nav>

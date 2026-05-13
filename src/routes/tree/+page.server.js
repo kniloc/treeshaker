@@ -1,6 +1,7 @@
 import {getUserData} from "$lib/server/userUtils.js";
-import {getProduceImages} from "$lib/server/imageUtils.js";
+import {getBoostSound, getProduceImages} from "$lib/server/imageUtils.js";
 import {getTwitchId} from "$lib/server/twitchUtils.js";
+import {produceData} from "$lib/server/produceData.js";
 
 export async function load({locals}) {
     const session = locals.session;
@@ -10,6 +11,7 @@ export async function load({locals}) {
     const users = await getUserData(twitchId);
     const userData = users[0];
     const produceImageSet = await getProduceImages();
+    const boostSoundUrl = await getBoostSound();
 
     const res = await fetch(`https://api.colonq.computer/api/user/${currentUser}`);
 
@@ -18,21 +20,11 @@ export async function load({locals}) {
 
         if(data) {
             const boost = data.match(/:boost.*?(\d+)/);
-            const copFishRatio = data.match(/:copfish-ratio.*?(\d+).*?(\d+)/);
 
             if(boost) {
                 clonkData.boost = parseInt(boost[1], 10);
             } else {
                 clonkData.boost = null;
-            }
-
-            if(copFishRatio) {
-                const numerator = parseInt(copFishRatio[1], 10);
-                const denominator = parseInt(copFishRatio[2], 10);
-
-                clonkData.copFishRatio = ((numerator / denominator) * 10).toFixed(1);
-            } else {
-                clonkData.copFishRatio = 0;
             }
         }
     } else {
@@ -43,6 +35,8 @@ export async function load({locals}) {
         clonkData,
         user: userData,
         images: produceImageSet.images,
-        twitchId
+        twitchId,
+        produceData,
+        boostSoundUrl
     }
 }

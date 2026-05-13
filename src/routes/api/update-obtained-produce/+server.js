@@ -1,9 +1,13 @@
 import {json} from "@sveltejs/kit";
 import {updateObtainedProduce} from "$lib/server/userUtils.js";
-import {requireAuth} from "$lib/server/authUtils.js";
+import {requireAuth, checkOrigin} from "$lib/server/authUtils.js";
+import {BETTER_AUTH_URL} from "$env/static/private";
 
 export async function POST({request, locals}){
     try {
+        const csrfError = checkOrigin(request, BETTER_AUTH_URL);
+        if (csrfError) return csrfError;
+
         const {produceData, twitchId} = await request.json();
 
         if(typeof produceData !== 'object' || !twitchId) {
