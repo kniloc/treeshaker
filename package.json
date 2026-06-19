@@ -10,15 +10,15 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-vercel": "^6.3.3",
-		"@sveltejs/kit": "^2.61.1",
+		"@sveltejs/kit": "^2.65.2",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
-		"svelte": "^5.55.10",
-		"vite": "^8.0.14"
+		"svelte": "^5.56.3",
+		"vite": "^8.0.16"
 	},
 	"dependencies": {
 		"@fontsource-variable/eb-garamond": "^5.2.7",
 		"@vercel/blob": "^2.4.0",
-		"better-auth": "^1.6.11",
+		"better-auth": "^1.6.19",
 		"pg": "^8.21.0"
 	}
 }
