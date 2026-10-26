@@ -1,4 +1,4 @@
-import { fetchUserData } from '$lib/clientUtils.js'
+import { fetchUserData } from '#lib/clientUtils.js'
 
 const POLLING_INTERVAL_MS = 15000;
 

@@ -1,11 +1,16 @@
-import {betterAuth} from "better-auth";
-import {Pool} from "pg";
-import {AUTH_TWITCH_ID, AUTH_TWITCH_SECRET, BETTER_AUTH_URL, X_POSTGRES_URL} from "$env/static/private";
-import {STARTER_TURNS} from "$lib/gameConfig.js";
+import { betterAuth } from "better-auth";
+import { Pool } from "pg";
 
-export const dbPool = new Pool({
-    connectionString: X_POSTGRES_URL
-});
+import {
+    AUTH_TWITCH_ID,
+    AUTH_TWITCH_SECRET,
+    BETTER_AUTH_URL,
+    X_POSTGRES_URL
+} from "$app/env/private";
+
+import { STARTER_TURNS } from "#lib/gameConfig.js";
+
+export const dbPool = new Pool({ connectionString: X_POSTGRES_URL });
 
 export const auth = betterAuth({
     baseURL: BETTER_AUTH_URL,

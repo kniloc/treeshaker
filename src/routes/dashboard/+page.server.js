@@ -1,6 +1,6 @@
-import {getProduceImages} from "$lib/server/imageUtils.js";
-import {getObtainedProduceData, getUserData} from "$lib/server/userUtils.js";
-import {getTwitchId} from "$lib/server/twitchUtils.js";
+import {getProduceImages} from "#lib/server/imageUtils.js";
+import {getObtainedProduceData, getUserData} from "#lib/server/userUtils.js";
+import {getTwitchId} from "#lib/server/twitchUtils.js";
 
 export async function load({locals}) {
     const session = locals.session;

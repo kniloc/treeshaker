@@ -21,5 +21,9 @@
 		"better-auth": "^1.7.14",
 		"pg": "^8.23.1"
 	},
-	"packageManager": "pnpm@12.15.0"
+	"packageManager": "pnpm@12.15.0",
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
+	}
 }

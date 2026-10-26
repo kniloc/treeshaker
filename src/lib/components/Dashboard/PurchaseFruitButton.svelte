@@ -1,6 +1,6 @@
 <script>
     import {onMount, onDestroy} from "svelte";
-    import { purchaseFruit } from "$lib/clientUtils.js";
+    import { purchaseFruit } from "#lib/clientUtils.js";
     import {invalidateAll} from "$app/navigation";
     import {
         PURCHASE_COOLDOWN,
@@ -9,7 +9,7 @@
         PURCHASE_MAX_PRICE,
         PURCHASE_MIN_REMAINING,
         PURCHASE_MAX_REMAINING,
-    } from "$lib/gameConfig.js";
+    } from "#lib/gameConfig.js";
 
     const DEV_MODE = import.meta.env.DEV;
     const COOLDOWN_MS = DEV_MODE ? PURCHASE_COOLDOWN_DEV : PURCHASE_COOLDOWN;

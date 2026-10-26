@@ -1,8 +1,8 @@
 import { json } from "@sveltejs/kit";
-import { decrementTurns } from "$lib/server/userUtils.js";
-import { shakeTree } from "$lib/server/treeState.js";
-import { requireAuth, checkOrigin } from "$lib/server/authUtils.js";
-import { BETTER_AUTH_URL } from "$env/static/private";
+import { decrementTurns } from "#lib/server/userUtils.js";
+import { shakeTree } from "#lib/server/treeState.js";
+import { requireAuth, checkOrigin } from "#lib/server/authUtils.js";
+import { BETTER_AUTH_URL } from "$app/env/private";
 
 export async function POST({ request, locals }) {
     try {

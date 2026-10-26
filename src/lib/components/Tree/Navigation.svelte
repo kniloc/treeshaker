@@ -1,5 +1,5 @@
 <script>
-    import {authClient} from "$lib/auth-client.js";
+    import {authClient} from "#lib/auth-client.js";
     import {goto} from "$app/navigation";
 
     async function signOut() {

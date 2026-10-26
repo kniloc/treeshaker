@@ -1,5 +1,5 @@
-import {list} from "@vercel/blob";
-import {BLOB_READ_WRITE_TOKEN} from "$env/static/private";
+import { list } from "@vercel/blob";
+import { BLOB_READ_WRITE_TOKEN } from "$app/env/private";
 
 async function fetchFromBlob(prefixPath) {
     try {
@@ -13,9 +13,9 @@ async function fetchFromBlob(prefixPath) {
 
 export async function getProduceImages() {
     const blobs = await fetchFromBlob("treeshaker/produce-images/");
-    const image = blobs.filter(blob => blob.url.endsWith(".png"));
+    const image = blobs.filter((blob) => blob.url.endsWith(".png"));
     return {
-        images: image.map(img => ({
+        images: image.map((img) => ({
             url: img.url,
             name: img.pathname.split("/").pop().replace(".png", "").split("-")[0]
         }))
@@ -24,6 +24,6 @@ export async function getProduceImages() {
 
 export async function getBoostSound() {
     const blobs = await fetchFromBlob("treeshaker/sfx/");
-    const sound = blobs.find(blob => blob.url.endsWith("boost-power.mp3"));
+    const sound = blobs.find((blob) => blob.url.endsWith("boost-power.mp3"));
     return sound?.url ?? null;
 }

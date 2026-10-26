@@ -1,7 +1,7 @@
-import {json} from "@sveltejs/kit";
-import {updateObtainedProduce} from "$lib/server/userUtils.js";
-import {requireAuth, checkOrigin} from "$lib/server/authUtils.js";
-import {BETTER_AUTH_URL} from "$env/static/private";
+import { json } from "@sveltejs/kit";
+import { updateObtainedProduce } from "#lib/server/userUtils.js";
+import { requireAuth, checkOrigin } from "#lib/server/authUtils.js";
+import { BETTER_AUTH_URL } from '$app/env/private';
 
 export async function POST({request, locals}){
     try {

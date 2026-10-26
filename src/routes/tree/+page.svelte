@@ -1,12 +1,12 @@
 <script>
     import { onMount, onDestroy, untrack } from "svelte";
-    import Title from "$lib/components/Title.svelte";
-    import Header from "$lib/components/Header.svelte";
-    import Navigation from "$lib/components/Tree/Navigation.svelte";
-    import Basket from "$lib/components/Tree/Basket.svelte";
-    import { shakeTree as shakeTreeApi, sellBasket, updateObtainedProduce, fetchUserData } from "$lib/clientUtils.js";
-    import { createUserDataSubscription } from "$lib/subscriptionUtils.js";
-    import { MIN_BASKET_SIZE } from "$lib/gameConfig.js";
+    import Title from "#lib/components/Title.svelte";
+    import Header from "#lib/components/Header.svelte";
+    import Navigation from "#lib/components/Tree/Navigation.svelte";
+    import Basket from "#lib/components/Tree/Basket.svelte";
+    import { shakeTree as shakeTreeApi, sellBasket, updateObtainedProduce, fetchUserData } from "#lib/clientUtils.js";
+    import { createUserDataSubscription } from "#lib/subscriptionUtils.js";
+    import { MIN_BASKET_SIZE } from "#lib/gameConfig.js";
 
     // Constants
     const DEV_MODE = import.meta.env.DEV;

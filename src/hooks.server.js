@@ -1,4 +1,4 @@
-import {auth} from "$lib/auth.js";
+import {auth} from "#lib/auth.js";
 import {svelteKitHandler} from "better-auth/svelte-kit";
 
 export async function handle({event, resolve}) {

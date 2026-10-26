@@ -1,8 +1,8 @@
 <script>
-    import Title from "$lib/components/Title.svelte";
-    import Header from "$lib/components/Header.svelte";
-    import LeaderBoard from "$lib/components/Home/LeaderBoard.svelte";
-    import {authClient} from "$lib/auth-client.js";
+    import Title from "#lib/components/Title.svelte";
+    import Header from "#lib/components/Header.svelte";
+    import LeaderBoard from "#lib/components/Home/LeaderBoard.svelte";
+    import {authClient} from "#lib/auth-client.js";
 
     const {data} = $props();
     const leaderboardData = $derived(data.leaderboardData);

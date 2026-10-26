@@ -1,8 +1,8 @@
 <script>
-    import Title from "$lib/components/Title.svelte";
-    import ButtonStyledLink from "$lib/components/Home/ButtonStyledLink.svelte";
-    import InfoContainer from "$lib/components/Dashboard/InfoContainer.svelte";
-    import ProduceImages from "$lib/components/Dashboard/ProduceImages.svelte";
+    import Title from "#lib/components/Title.svelte";
+    import ButtonStyledLink from "#lib/components/Home/ButtonStyledLink.svelte";
+    import InfoContainer from "#lib/components/Dashboard/InfoContainer.svelte";
+    import ProduceImages from "#lib/components/Dashboard/ProduceImages.svelte";
 
     const {data} = $props();
     const produceImages = $derived(data.images.filter(image => image.name !== "Bee"));

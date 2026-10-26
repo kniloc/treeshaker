@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import {getTwitchId} from "$lib/server/twitchUtils.js";
+import {getTwitchId} from "#lib/server/twitchUtils.js";
 
 export async function requireAuth(locals, twitchId) {
     const session = locals.session;

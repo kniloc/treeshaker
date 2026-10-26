@@ -1,10 +1,10 @@
-import {json} from "@sveltejs/kit";
-import {addToBalance} from "$lib/server/userUtils.js";
-import {calculateEarnings} from "$lib/server/produceData.js";
-import {getUserBasket, resetUserState} from "$lib/server/treeState.js";
-import {requireAuth, checkOrigin} from "$lib/server/authUtils.js";
-import {BETTER_AUTH_URL} from "$env/static/private";
-import {MIN_BASKET_SIZE} from "$lib/gameConfig.js";
+import { json } from "@sveltejs/kit";
+import { addToBalance } from "#lib/server/userUtils.js";
+import { calculateEarnings } from "#lib/server/produceData.js";
+import { getUserBasket, resetUserState } from "#lib/server/treeState.js";
+import { requireAuth, checkOrigin } from "#lib/server/authUtils.js";
+import { BETTER_AUTH_URL } from "$app/env/private";
+import { MIN_BASKET_SIZE } from "#lib/gameConfig.js";
 
 export async function POST({request, locals}) {
     try {
@@ -35,12 +35,16 @@ export async function POST({request, locals}) {
 
         resetUserState(twitchId);
 
-        return json({ success: true, balance: newBalance, baseEarnings, bonusEarnings, boostPct });
-    } catch (error) {
-        console.error('Error updating balance:', error);
         return json({
-            error: 'Failed to update balance',
-            details: error.message
-        }, {status: 500});
+            success: true,
+            balance: newBalance,
+            baseEarnings,
+            bonusEarnings,
+            boostPct
+        });
+    } catch(error) {
+        console.error('Error updating balance:', error);
+
+        return json({ error: 'Failed to update balance', details: error.message }, { status: 500 });
     }
 }

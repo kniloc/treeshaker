@@ -1,5 +1,5 @@
-import {dbPool} from "$lib/auth.js";
-import {produceData} from "$lib/server/produceData.js";
+import {dbPool} from "#lib/auth.js";
+import {produceData} from "#lib/server/produceData.js";
 
 const allowedColumnNames = produceData.map(item => item.name.toLowerCase());
 

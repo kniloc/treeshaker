@@ -1,5 +1,5 @@
 import { produceData } from "./produceData.js";
-import { TREE_DISTRIBUTION } from "$lib/gameConfig.js";
+import { TREE_DISTRIBUTION } from "#lib/gameConfig.js";
 
 const treeDistribution = Object.entries(TREE_DISTRIBUTION).flatMap(
     ([category, count]) => Array(count).fill(category)

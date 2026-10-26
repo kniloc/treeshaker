@@ -1,4 +1,4 @@
-import { dbPool } from '$lib/auth.js';
+import { dbPool } from '#lib/auth.js';
 
 export async function getTwitchId(betterAuthUserId) {
     const result = await dbPool.query(

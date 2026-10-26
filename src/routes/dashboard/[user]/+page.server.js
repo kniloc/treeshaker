@@ -1,6 +1,6 @@
-import {getProduceImages} from "$lib/server/imageUtils.js";
-import {getObtainedProduceData, getUserBalance} from "$lib/server/userUtils.js";
-import {dbPool} from "$lib/auth.js";
+import {getProduceImages} from "#lib/server/imageUtils.js";
+import {getObtainedProduceData, getUserBalance} from "#lib/server/userUtils.js";
+import {dbPool} from "#lib/auth.js";
 import {error} from "@sveltejs/kit";
 
 export async function load({params}) {

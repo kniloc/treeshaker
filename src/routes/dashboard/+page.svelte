@@ -1,10 +1,10 @@
 <script>
-    import Title from "$lib/components/Title.svelte";
-    import ButtonStyledLink from "$lib/components/Home/ButtonStyledLink.svelte";
-    import InfoContainer from "$lib/components/Dashboard/InfoContainer.svelte";
-    import ProduceImages from "$lib/components/Dashboard/ProduceImages.svelte";
-    import PurchaseFruitButton from "$lib/components/Dashboard/PurchaseFruitButton.svelte";
-    import { PRODUCE_PURCHASE_THRESHOLD } from "$lib/gameConfig.js";
+    import Title from "#lib/components/Title.svelte";
+    import ButtonStyledLink from "#lib/components/Home/ButtonStyledLink.svelte";
+    import InfoContainer from "#lib/components/Dashboard/InfoContainer.svelte";
+    import ProduceImages from "#lib/components/Dashboard/ProduceImages.svelte";
+    import PurchaseFruitButton from "#lib/components/Dashboard/PurchaseFruitButton.svelte";
+    import { PRODUCE_PURCHASE_THRESHOLD } from "#lib/gameConfig.js";
 
     let {data} = $props();
     const produceImages = $derived(data.images.filter(image => image.name !== "Bee"));
