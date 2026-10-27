@@ -1,4 +1,3 @@
-import { json } from "@sveltejs/kit";
 import { getUserData } from "#lib/server/userUtils.js";
 import { requireAuth, checkOrigin } from "#lib/server/authUtils.js";
 import { BETTER_AUTH_URL } from '$app/env/private';
@@ -11,7 +10,7 @@ export async function POST({ request, locals }) {
         const { twitchId } = await request.json();
 
         if (!twitchId) {
-            return json({ error: 'Invalid parameters' }, { status: 400 });
+            return Response.json({ error: 'Invalid parameters' }, { status: 400 });
         }
 
         const auth = await requireAuth(locals, twitchId);
@@ -21,16 +20,16 @@ export async function POST({ request, locals }) {
         const userData = users[0];
 
         if (!userData) {
-            return json({ error: 'User not found' }, { status: 404 });
+            return Response.json({ error: 'User not found' }, { status: 404 });
         }
 
-        return json({
+        return Response.json({
             turns: userData.turns_left,
             balance: userData.balance
         });
     } catch (error) {
         console.error('Error fetching user data:', error);
-        return json({
+        return Response.json({
             error: 'Failed to fetch user data',
             details: error.message
         }, { status: 500 });

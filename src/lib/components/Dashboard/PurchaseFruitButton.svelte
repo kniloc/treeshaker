@@ -1,7 +1,7 @@
 <script>
     import {onMount, onDestroy} from "svelte";
     import { purchaseFruit } from "#lib/clientUtils.js";
-    import {invalidateAll} from "$app/navigation";
+    import {refreshAll} from "$app/navigation";
     import {
         PURCHASE_COOLDOWN,
         PURCHASE_COOLDOWN_DEV,
@@ -72,7 +72,7 @@
         try {
             const result = await purchaseFruit(twitchId);
             if (result?.success) {
-                await invalidateAll();
+                await refreshAll();
             }
         } finally {
             isPurchasing = false;

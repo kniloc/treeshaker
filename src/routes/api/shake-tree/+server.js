@@ -1,4 +1,3 @@
-import { json } from "@sveltejs/kit";
 import { decrementTurns } from "#lib/server/userUtils.js";
 import { shakeTree } from "#lib/server/treeState.js";
 import { requireAuth, checkOrigin } from "#lib/server/authUtils.js";
@@ -12,7 +11,7 @@ export async function POST({ request, locals }) {
         const { twitchId } = await request.json();
 
         if (!twitchId) {
-            return json({ error: 'Invalid parameters' }, { status: 400 });
+            return Response.json({ error: 'Invalid parameters' }, { status: 400 });
         }
 
         const auth = await requireAuth(locals, twitchId);
@@ -21,12 +20,12 @@ export async function POST({ request, locals }) {
         const newTurns = await decrementTurns(twitchId);
 
         if (newTurns === null) {
-            return json({ error: 'No turns remaining or user not found' }, { status: 400 });
+            return Response.json({ error: 'No turns remaining or user not found' }, { status: 400 });
         }
 
         const result = shakeTree(twitchId);
 
-        return json({
+        return Response.json({
             success: true,
             turns: newTurns,
             isBee: result.isBee,
@@ -35,7 +34,7 @@ export async function POST({ request, locals }) {
         });
     } catch (error) {
         console.error('Error shaking tree:', error);
-        return json({
+        return Response.json({
             error: 'Failed to shake tree',
             details: error.message
         }, { status: 500 });

@@ -5,7 +5,7 @@
     async function signOut() {
         try {
             await authClient.signOut();
-            await goto('/', {replaceState: true});
+            await goto('/', {replace: true});
         } catch (error) {
             console.error('Sign out failed:', error);
         }

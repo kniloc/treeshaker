@@ -1,4 +1,3 @@
-import { json } from "@sveltejs/kit";
 import { addToBalance } from "#lib/server/userUtils.js";
 import { calculateEarnings } from "#lib/server/produceData.js";
 import { getUserBasket, resetUserState } from "#lib/server/treeState.js";
@@ -14,7 +13,7 @@ export async function POST({request, locals}) {
         const { twitchId, clonkData } = await request.json();
 
         if(!twitchId) {
-            return json({ error: 'Invalid parameters' }, {status: 400});
+            return Response.json({ error: 'Invalid parameters' }, {status: 400});
         }
 
         const auth = await requireAuth(locals, twitchId);
@@ -23,19 +22,19 @@ export async function POST({request, locals}) {
         const basketItems = getUserBasket(twitchId);
 
         if (basketItems.length < MIN_BASKET_SIZE) {
-            return json({ error: 'Need at least 5 items to sell' }, {status: 400});
+            return Response.json({ error: 'Need at least 5 items to sell' }, {status: 400});
         }
 
         const { baseEarnings, bonusEarnings, boostPct, total } = calculateEarnings(basketItems, clonkData);
         const newBalance = await addToBalance(total, twitchId);
 
         if (newBalance === null) {
-            return json({ error: 'Failed to update balance' }, {status: 400});
+            return Response.json({ error: 'Failed to update balance' }, {status: 400});
         }
 
         resetUserState(twitchId);
 
-        return json({
+        return Response.json({
             success: true,
             balance: newBalance,
             baseEarnings,
@@ -45,6 +44,6 @@ export async function POST({request, locals}) {
     } catch(error) {
         console.error('Error updating balance:', error);
 
-        return json({ error: 'Failed to update balance', details: error.message }, { status: 500 });
+        return Response.json({ error: 'Failed to update balance', details: error.message }, { status: 500 });
     }
 }
